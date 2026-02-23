@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MatchMyTone & Outfit Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+    :root {
+      --bg: #faf6f1;
+      --fg: #2c1e10;
+      --card: #ffffff;
+      --card-border: #ece4da;
+      --primary: #8b4c24;
+      --primary-light: #c47a4a;
+      --primary-bg: #f5ebe2;
+      --muted: #a09080;
+      --success: #3a855c;
+      --warning: #c47a4a;
+      --danger: #c44a4a;
+      --ring: rgba(139,76,36,0.25);
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ---- Header ---- */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: rgba(250,246,241,0.85);
+      border-bottom: 1px solid var(--card-border);
+    }
+    .header-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--fg);
+    }
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .logo-icon svg { width: 20px; height: 20px; }
+    .logo-text { font-weight: 700; font-size: 1.2rem; letter-spacing: -0.02em; }
+    .logo-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--primary-bg);
+      color: var(--primary);
+      font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+
+    /* ---- Hero ---- */
+    .hero {
+      text-align: center;
+      padding: 56px 24px 40px;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    .hero h1 {
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      text-wrap: balance;
+    }
+    .hero h1 span { color: var(--primary); }
+    .hero p {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+      text-wrap: pretty;
+    }
+
+    /* ---- Main grid ---- */
+    .main-grid {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+    @media (max-width: 768px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ---- Card ---- */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .card-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    /* ---- Upload row ---- */
+    .upload-row { display: flex; gap: 16px; }
+    @media (max-width: 520px) { .upload-row { flex-direction: column; } }
+
+    /* ---- Status indicator ---- */
+    #uploadStatus {
+      background: var(--primary-bg);
+      border: 1px solid var(--primary-light);
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 16px;
+      margin-bottom: 12px;
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--primary);
+    }
+
+    /* ---- Analyze button ---- */
+    .btn-primary {
+      margin-top: 24px;
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: var(--primary);
+      color: #fff;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-primary:hover { background: #7a3f1c; box-shadow: 0 4px 16px var(--ring); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* spinner */
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---- Steps ---- */
+    .steps {
+      margin-top: 24px;
+      display: flex;
+      gap: 12px;
+    }
+    .step {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: var(--primary-bg);
+      border-radius: 10px;
+    }
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-text { font-size: 0.82rem; font-weight: 500; color: var(--fg); }
+    @media (max-width: 520px) { .steps { flex-direction: column; } }
+
+    /* ---- Results panel ---- */
+    .results-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      text-align: center;
+      color: var(--muted);
+    }
+    .results-placeholder svg {
+      width: 64px;
+      height: 64px;
+      color: var(--card-border);
+      margin-bottom: 16px;
+    }
+    .results-placeholder p { font-size: 0.95rem; }
+    .results-placeholder .sub { font-size: 0.82rem; margin-top: 6px; }
+
+    /* Score ring */
+    .score-section { text-align: center; margin-bottom: 28px; }
+    .score-ring-wrap {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      margin: 0 auto 16px;
+    }
+    .score-ring-wrap svg { width: 160px; height: 160px; transform: rotate(-90deg); }
+    .score-ring-bg { fill: none; stroke: var(--card-border); stroke-width: 10; }
+    .score-ring-fg {
+      fill: none;
+      stroke-width: 10;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1), stroke 0.3s;
+    }
+    .score-value {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .score-value .num {
+      font-size: 2.5rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+    .score-value .of {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* Match badge */
+    .match-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.88rem;
+    }
+    .match-badge.match { background: #e6f4ec; color: var(--success); }
+    .match-badge.partial { background: #fef3e2; color: var(--warning); }
+    .match-badge.nomatch { background: #fde8e8; color: var(--danger); }
+    .match-badge svg { width: 16px; height: 16px; }
+
+    /* Detail rows */
+    .detail-section { margin-top: 24px; }
+    .detail-section .section-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .detail-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row .label { font-size: 0.9rem; color: var(--muted); }
+    .detail-row .value { font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
+    .color-swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: 2px solid var(--card-border);
+      flex-shrink: 0;
+    }
+    .hex-code {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    /* Score bar */
+    .score-bar-wrap { margin-top: 24px; }
+    .score-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      margin-bottom: 6px;
+    }
+    .score-bar-label span:first-child { color: var(--muted); }
+    .score-bar-label span:last-child { font-weight: 600; }
+    .score-bar {
+      height: 8px;
+      border-radius: 999px;
+      background: var(--card-border);
+      overflow: hidden;
+    }
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 1s cubic-bezier(0.4,0,0.2,1), background 0.3s;
+    }
+
+    /* Error */
+    .error-box {
+      background: #fde8e8;
+      color: var(--danger);
+      border: 1px solid #f5c6c6;
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .error-box svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+    /* ---- Upload action buttons ---- */
+    .upload-actions {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 200px;
+    }
+    .upload-action-btn {
+      flex: 1;
+      position: relative;
+      border: 2px dashed var(--card-border);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: transparent;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--fg);
+    }
+    .upload-action-btn:hover {
+      border-color: var(--primary-light);
+      background: var(--primary-bg);
+    }
+    .upload-action-btn .action-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--primary-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+    .upload-action-btn:hover .action-icon { transform: scale(1.08); }
+    .upload-action-btn .action-icon svg { width: 18px; height: 18px; color: var(--primary); }
+    .upload-action-btn .action-hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-weight: 400;
+    }
+    .upload-action-btn input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .upload-action-btn.has-preview {
+      border-style: solid;
+      border-color: var(--primary-light);
+      overflow: hidden;
+      padding: 0;
+    }
+    .upload-action-btn.has-preview .preview-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+    .upload-action-btn.has-preview .preview-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.40);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+      border-radius: 10px;
+    }
+    .upload-action-btn.has-preview:hover .preview-overlay { opacity: 1; }
+    .upload-action-btn.has-preview .preview-overlay span {
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.85rem;
+      background: rgba(0,0,0,0.5);
+      padding: 6px 14px;
+      border-radius: 8px;
+    }
+    .upload-label { font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 8px; }
+
+    /* Choice modal */
+    .choice-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+    }
+    .choice-modal.open { display: flex; }
+    .choice-box {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 32px 24px;
+      width: 90%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    .choice-box h3 { font-size: 1.2rem; font-weight: 700; }
+    .choice-box p { font-size: 0.9rem; color: var(--muted); margin: 0; }
+    .choice-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+    }
+    .btn-choice {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .btn-choice-camera {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-choice-camera:hover { background: #7a3f1c; }
+    .btn-choice-device {
+      background: var(--primary-bg);
+      color: var(--primary);
+      border: 1.5px solid var(--primary-light);
+    }
+    .btn-choice-device:hover { background: #f5ebe2; }
+    .btn-choice:active { transform: scale(0.97); }
+    .btn-choice svg { width: 20px; height: 20px; }
+
+    /* Preview modal */
+    .preview-box {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 24px;
+      width: 90%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .preview-box img {
+      width: 100%;
+      border-radius: 12px;
+      object-fit: contain;
+      max-height: 60vh;
+    }
+    .preview-actions {
+      display: flex;
+      gap: 12px;
+    }
+    .preview-actions .btn-choice {
+      flex: 1;
+    }
+
+    /* Camera modal */
+    .camera-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+    }
+    .camera-modal.open { display: flex; }
+    .camera-box {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 24px;
+      width: 90%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .camera-box h3 { font-size: 1.1rem; font-weight: 700; }
+    .camera-video-wrap {
+      width: 100%;
+      aspect-ratio: 4/3;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+      position: relative;
+    }
+    .camera-video-wrap video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .camera-video-wrap canvas {
+      display: none;
+    }
+    .camera-actions {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+    }
+    .camera-actions button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .camera-actions button:active { transform: scale(0.97); }
+    .btn-capture {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+    }
+    .btn-capture:hover { background: #7a3f1c; }
+    .btn-cancel-cam {
+      background: transparent;
+      color: var(--fg);
+      border: 1.5px solid var(--card-border);
+    }
+    .btn-cancel-cam:hover { background: var(--primary-bg); }
+    .btn-retake {
+      background: transparent;
+      color: var(--fg);
+      border: 1.5px solid var(--card-border);
+    }
+    .btn-retake:hover { background: var(--primary-bg); }
+    .btn-use-photo {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+    }
+    .btn-use-photo:hover { background: #7a3f1c; }
+
+    /* Animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.5s ease forwards; }
+    .delay-1 { animation-delay: 0.1s; opacity: 0; }
+    .delay-2 { animation-delay: 0.2s; opacity: 0; }
+    .delay-3 { animation-delay: 0.3s; opacity: 0; }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      border-top: 1px solid var(--card-border);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+      <a href="/" class="logo">
+        <div class="logo-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="#fff"><path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128Zm0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42" /></svg>
+        </div>
+        <span class="logo-text">Match My Tone</span>
+        <span class="logo-badge">AI-Powered</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>Discover Your <span>Perfect Color Match</span></h1>
+    <p>Upload a photo of your face and outfit to analyze skin tone compatibility with AI-powered color detection.</p>
+  </section>
+
+  <!-- Main Content -->
+  <main class="main-grid">
+    <!-- Left: Upload Panel -->
+    <div class="card">
+      <div class="card-title">Upload Images</div>
+
+      <form id="analyzeForm" enctype="multipart/form-data">
+        <div class="upload-row">
+          <!-- Face Upload -->
+          <div class="upload-actions" id="faceGroup">
+            <div class="upload-label">Face Photo</div>
+            <button type="button" class="upload-action-btn" id="faceMainBtn" onclick="showChoiceModal('face')">
+              <div class="action-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z" /></svg>
+              </div>
+              <div>
+                <div>Take/Upload Photo</div>
+                <div class="action-hint">Camera or device</div>
+              </div>
+            </button>
+            <input type="file" name="face" id="faceInput" accept="image/*" style="display:none;" />
+          </div>
+
+          <!-- Outfit Upload -->
+          <div class="upload-actions" id="outfitGroup">
+            <div class="upload-label">Outfit Photo</div>
+            <button type="button" class="upload-action-btn" id="outfitMainBtn" onclick="showChoiceModal('outfit')">
+              <div class="action-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z" /></svg>
+              </div>
+              <div>
+                <div>Take/Upload Photo</div>
+                <div class="action-hint">Camera or device</div>
+              </div>
+            </button>
+            <input type="file" name="outfit" id="outfitInput" accept="image/*" style="display:none;" />
+          </div>
+        </div>
+
+        <div id="uploadStatus" style="display:none;">
+          ✓ Both photos ready - Click Analyze
+        </div>
+    
+
+        <button type="submit" class="btn-primary" id="analyzeBtn">
+          <span id="btnText">Analyze Compatibility</span>
+          <div class="spinner" id="btnSpinner" style="display:none;"></div>
+        </button>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-text">Take/upload face</div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-text">Take/upload outfit</div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-text">Get compatibility</div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Right: Results Panel -->
+    <div class="card">
+      <div class="card-title">Results</div>
+      <div id="resultsContainer" class="results-placeholder">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+        <p>Upload both images to see your compatibility analysis</p>
+        <p class="sub">Our AI will analyze your skin tone and outfit colors</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Choice Modal (Camera or Device) -->
+  <div class="choice-modal" id="choiceModal">
+    <div class="choice-box">
+      <h3>Take or Upload Photo</h3>
+      <p>Choose where you want to get your photo from</p>
+      <div class="choice-buttons">
+        <button type="button" class="btn-choice btn-choice-camera" onclick="chooseCamera()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z" /></svg>
+          Take Photo (Camera)
+        </button>
+        <button type="button" class="btn-choice btn-choice-device" onclick="chooseDevice()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
+          Upload from Device
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Full-Size Photo Preview Modal -->
+  <div class="choice-modal" id="previewModal" style="z-index: 110;">
+    <div class="preview-box">
+      <img id="previewImage" src="" alt="Full size preview" />
+      <div class="preview-actions">
+        <button type="button" class="btn-choice btn-choice-device" onclick="closePreview()">Back</button>
+        <button type="button" class="btn-choice btn-choice-camera" onclick="acceptPreview()">Use This Photo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Camera Modal -->
+  <div class="camera-modal" id="cameraModal">
+    <div class="camera-box">
+      <h3>Take a Photo</h3>
+      <div class="camera-video-wrap">
+        <video id="cameraVideo" autoplay playsinline></video>
+        <canvas id="cameraCanvas"></canvas>
+      </div>
+      <div class="camera-actions">
+        <button type="button" class="btn-capture" id="captureBtn">Capture Photo</button>
+        <button type="button" class="btn-cancel-cam" onclick="closeCamera()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Match My Tone. Powered by AI-driven color analysis.</p>
+  </footer>
+
+  <script>
+    /* ---- Upload zone preview ---- */
+    // Store captured blobs from camera
+    const capturedFiles = { face: null, outfit: null };
+
+    function updateUploadStatus() {
+      const status = document.getElementById('uploadStatus');
+      const hasFace = capturedFiles.face || document.getElementById('faceInput').files[0];
+      const hasOutfit = capturedFiles.outfit || document.getElementById('outfitInput').files[0];
+      if (hasFace && hasOutfit) {
+        status.style.display = 'block';
+      } else {
+        status.style.display = 'none';
+      }
+    }
+
+    function showPreviewOnBtn(btn, dataUrl) {
+      btn.classList.add('has-preview');
+      let preview = btn.querySelector('.preview-img');
+      if (!preview) {
+        preview = document.createElement('img');
+        preview.className = 'preview-img';
+        btn.appendChild(preview);
+      }
+      preview.src = dataUrl;
+
+      let overlay = btn.querySelector('.preview-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'preview-overlay';
+        overlay.innerHTML = '<span>Change Photo</span>';
+        btn.appendChild(overlay);
+      }
+    }
+
+    function setupUploadBtn(btnId, inputId, type) {
+      const btn = document.getElementById(btnId);
+      const input = document.getElementById(inputId);
+
+      input.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+          const file = this.files[0];
+          capturedFiles[type] = file; // Store the file from device upload
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            showPreviewOnBtn(btn, e.target.result);
+            updateUploadStatus();
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      btn.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        btn.style.borderColor = 'var(--primary-light)';
+        btn.style.background = 'var(--primary-bg)';
+      });
+      btn.addEventListener('dragleave', function() {
+        btn.style.borderColor = '';
+        btn.style.background = '';
+      });
+      btn.addEventListener('drop', function(e) {
+        e.preventDefault();
+        btn.style.borderColor = '';
+        btn.style.background = '';
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          const file = e.dataTransfer.files[0];
+          capturedFiles[type] = file; // Store the dropped file
+          const reader = new FileReader();
+          reader.onload = function(ev) {
+            showPreviewOnBtn(btn, ev.target.result);
+            updateUploadStatus();
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    // Setup the upload buttons
+    setupUploadBtn('faceMainBtn', 'faceInput', 'face');
+    setupUploadBtn('outfitMainBtn', 'outfitInput', 'outfit');
+
+    /* ---- Choice Modal ---- */
+    const choiceModal = document.getElementById('choiceModal');
+    let pendingPhotoTarget = null; // 'face' or 'outfit'
+
+    function showChoiceModal(target) {
+      pendingPhotoTarget = target;
+      choiceModal.classList.add('open');
+    }
+
+    function closeChoiceModal(reset = true) {
+      choiceModal.classList.remove('open');
+      if (reset) pendingPhotoTarget = null;
+    }
+
+    function chooseCamera() {
+      const target = pendingPhotoTarget;   // store it first
+      closeChoiceModal(false);             // don’t reset
+      openCamera(target);
+    }
+
+
+    function chooseDevice() {
+      const target = pendingPhotoTarget;   // preserve target
+      closeChoiceModal(false);             // don’t reset yet
+
+      const inputId = target === 'face' ? 'faceInput' : 'outfitInput';
+      document.getElementById(inputId).click();
+    }
+
+
+    // Close choice modal when clicking outside
+    choiceModal.addEventListener('click', function(e) {
+      if (e.target === this) closeChoiceModal();
+    });
+
+    /* ---- Full-Size Photo Preview Modal ---- */
+    const previewModal = document.getElementById('previewModal');
+    const previewImage = document.getElementById('previewImage');
+    let previewDataUrl = null;
+    let previewTarget = null;
+
+    function showPreview(dataUrl, target) {
+      previewDataUrl = dataUrl;
+      previewTarget = target;
+      previewImage.src = dataUrl;
+      previewModal.classList.add('open');
+    }
+
+    function closePreview() {
+      previewModal.classList.remove('open');
+      previewDataUrl = null;
+      previewTarget = null;
+    }
+
+    function acceptPreview() {
+      // File is already stored in capturedFiles from usePhoto()
+      // Just close the preview modal
+      closePreview();
+    }
+
+    // Close preview modal when clicking outside
+    previewModal.addEventListener('click', function(e) {
+      if (e.target === this) closePreview();
+    });
+
+    /* ---- Camera ---- */
+    let currentCameraTarget = null; // 'face' or 'outfit'
+    let cameraStream = null;
+
+    const cameraModal = document.getElementById('cameraModal');
+    const cameraVideo = document.getElementById('cameraVideo');
+    const cameraCanvas = document.getElementById('cameraCanvas');
+    const captureBtn = document.getElementById('captureBtn');
+
+    function openCamera(target) {
+      currentCameraTarget = target;
+      cameraModal.classList.add('open');
+
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+        .then(stream => {
+          cameraStream = stream;
+          cameraVideo.srcObject = stream;
+        })
+        .catch(err => {
+          alert('Camera access denied or unavailable. Please use device upload instead.');
+          closeCamera();
+        });
+    }
+
+    function closeCamera() {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+      cameraModal.classList.remove('open');
+      cameraVideo.srcObject = null;
+      currentCameraTarget = null;
+    }
+
+    captureBtn.addEventListener('click', function() {
+      const context = cameraCanvas.getContext('2d');
+      cameraCanvas.width = cameraVideo.videoWidth;
+      cameraCanvas.height = cameraVideo.videoHeight;
+      context.drawImage(cameraVideo, 0, 0);
+      usePhoto();
+    });
+
+    function usePhoto() {
+      cameraCanvas.toBlob(function(blob) {
+        if (!blob) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const dataUrl = e.target.result;
+          
+          // Create a File from the blob
+          const file = new File([blob], currentCameraTarget + '-capture.jpg', { type: 'image/jpeg' });
+          capturedFiles[currentCameraTarget] = file;
+
+          // Show full-size preview modal
+          showPreview(dataUrl, currentCameraTarget);
+          
+          // Also show preview on the main button (so it's ready if they accept)
+          const btnId = currentCameraTarget === 'face' ? 'faceMainBtn' : 'outfitMainBtn';
+          const btn = document.getElementById(btnId);
+          showPreviewOnBtn(btn, dataUrl);
+
+          // Clear file input if it had anything
+          document.getElementById(currentCameraTarget === 'face' ? 'faceInput' : 'outfitInput').value = '';
+
+          updateUploadStatus();
+          closeCamera();
+        };
+        reader.readAsDataURL(blob);
+      }, 'image/jpeg', 0.9);
+    }
+
+    /* ---- Form submission ---- */
+    const form = document.getElementById('analyzeForm');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const resultsContainer = document.getElementById('resultsContainer');
+
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      // Check if both images are present
+      const face = capturedFiles.face || document.getElementById('faceInput').files[0];
+      const outfit = capturedFiles.outfit || document.getElementById('outfitInput').files[0];
+
+      if (!face || !outfit) {
+        alert('Please upload or capture both face and outfit photos.');
+        return;
+      }
+
+      analyzeBtn.disabled = true;
+      btnText.style.display = 'none';
+      btnSpinner.style.display = 'block';
+
+      const formData = new FormData();
+      formData.append('face', face);
+      formData.append('outfit', outfit);
+
+      try {
+        const response = await fetch('/analyze', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          displayResults(data);
+        } else {
+          resultsContainer.innerHTML = `
+            <div class="error-box">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c.866-1.5 2.845-2.5 5.303-2.5s4.437 1 5.303 2.5M3 20.25A9 9 0 1 0 21 20.25" /></svg>
+              <span>${data.error || 'An error occurred. Please try again.'}</span>
+            </div>
+          `;
+        }
+      } catch (error) {
+        resultsContainer.innerHTML = `
+          <div class="error-box">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c.866-1.5 2.845-2.5 5.303-2.5s4.437 1 5.303 2.5M3 20.25A9 9 0 1 0 21 20.25" /></svg>
+            <span>Network error. Please check your connection and try again.</span>
+          </div>
+        `;
+      } finally {
+        analyzeBtn.disabled = false;
+        btnText.style.display = 'block';
+        btnSpinner.style.display = 'none';
+      }
+    });
+
+    function displayResults(data) {
+      const skin_tone = data.skin_tone;
+      const result = data.result;
+      const score = data.score;
+      const skin_color = data.skin_color;
+      const outfit_color = data.outfit_color;
+
+      const matchClassMap = {
+        'Match': { className: 'match', icon: '✓', text: 'Great Match' },
+        'Partial Match': { className: 'partial', icon: '~', text: 'Decent Match' },
+        'Not a Match': { className: 'nomatch', icon: '✗', text: 'Not a Match' }
+      };
+
+      const match_info = matchClassMap[result] || { className: 'nomatch', icon: '?', text: 'Unknown' };
+
+      const skin_rgb = `rgb(${Math.round(skin_color[0])},${Math.round(skin_color[1])},${Math.round(skin_color[2])})`;
+      const outfit_rgb = `rgb(${Math.round(outfit_color[0])},${Math.round(outfit_color[1])},${Math.round(outfit_color[2])})`;
+
+      function rgbToHex(r, g, b) {
+        return '#' + [r, g, b].map(x => {
+          const hex = Math.round(x).toString(16);
+          return hex.length === 1 ? '0' + hex : hex;
+        }).join('').toUpperCase();
+      }
+
+      const skin_hex = rgbToHex(skin_color[0], skin_color[1], skin_color[2]);
+      const outfit_hex = rgbToHex(outfit_color[0], outfit_color[1], outfit_color[2]);
+
+      resultsContainer.innerHTML = `
+        <div class="score-section">
+          <div class="score-ring-wrap">
+            <svg viewBox="0 0 160 160">
+              <circle class="score-ring-bg" cx="80" cy="80" r="75"></circle>
+              <circle class="score-ring-fg" cx="80" cy="80" r="75" style="stroke: ${match_info.className === 'match' ? '#3a855c' : match_info.className === 'partial' ? '#c47a4a' : '#c44a4a'}; stroke-dasharray: ${(score/100)*471},471;" id="scoreRing"></circle>
+            </svg>
+            <div class="score-value">
+              <div class="num">${score}</div>
+              <div class="of">out of 100</div>
+            </div>
+          </div>
+          <div class="match-badge ${match_info.className}">
+            <span>${match_info.icon}</span>
+            <span>${match_info.text}</span>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="section-label">Skin Tone</div>
+          <div class="detail-row">
+            <div class="label">Classification</div>
+            <div class="value">${skin_tone}</div>
+          </div>
+          <div class="detail-row">
+            <div class="label">Color</div>
+            <div class="value">
+              <div class="color-swatch" style="background: ${skin_rgb};"></div>
+              <span class="hex-code">${skin_hex}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="section-label">Outfit Color</div>
+          <div class="detail-row">
+            <div class="label">Dominant Color</div>
+            <div class="value">
+              <div class="color-swatch" style="background: ${outfit_rgb};"></div>
+              <span class="hex-code">${outfit_hex}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="score-bar-wrap">
+          <div class="score-bar-label">
+            <span>Compatibility Score</span>
+            <span>${score}%</span>
+          </div>
+          <div class="score-bar">
+            <div class="score-bar-fill" style="background: ${match_info.className === 'match' ? '#3a855c' : match_info.className === 'partial' ? '#c47a4a' : '#c44a4a'}; width: ${score}%;"></div>
+          </div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
