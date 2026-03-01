@@ -351,6 +351,60 @@
       transition: width 1s cubic-bezier(0.4,0,0.2,1), background 0.3s;
     }
 
+    /* Recommendations */
+    .rec-section {
+      margin-top: 24px;
+      background: var(--primary-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .rec-section .section-label { margin-bottom: 10px; }
+    .rec-message {
+      font-size: 0.88rem;
+      color: var(--fg);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+    .rec-colors {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .rec-color-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 999px;
+      padding: 5px 12px 5px 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--fg);
+    }
+    .rec-color-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+    .rec-tip {
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-style: italic;
+      border-top: 1px solid var(--card-border);
+      padding-top: 10px;
+    }
+    .rec-avoid {
+      font-size: 0.8rem;
+      color: var(--danger);
+      margin-top: 8px;
+    }
+    .rec-avoid strong { font-weight: 600; }
+
     /* Error */
     .error-box {
       background: #fde8e8;
@@ -1083,6 +1137,7 @@
       const score = data.score;
       const skin_color = data.skin_color;
       const outfit_color = data.outfit_color;
+      const rec = data.recommendations;
 
       const matchClassMap = {
         'Match': { className: 'match', icon: '✓', text: 'Great Match' },
@@ -1104,6 +1159,27 @@
 
       const skin_hex = rgbToHex(skin_color[0], skin_color[1], skin_color[2]);
       const outfit_hex = rgbToHex(outfit_color[0], outfit_color[1], outfit_color[2]);
+
+      // Build recommendation color chips
+      let colorChipsHtml = '';
+      if (rec && rec.best_colors) {
+        colorChipsHtml = rec.best_colors.map(c => `
+          <div class="rec-color-chip">
+            <div class="rec-color-dot" style="background:${c.hex};"></div>
+            <span>${c.name}</span>
+          </div>
+        `).join('');
+      }
+
+      const recHtml = rec ? `
+        <div class="rec-section">
+          <div class="section-label">Color Recommendations</div>
+          <div class="rec-message">${rec.message}</div>
+          <div class="rec-colors">${colorChipsHtml}</div>
+          ${rec.avoid && rec.avoid.length ? `<div class="rec-avoid"><strong>⚠ Avoid:</strong> ${rec.avoid.join(', ')}</div>` : ''}
+          <div class="rec-tip">💡 ${rec.tip}</div>
+        </div>
+      ` : '';
 
       resultsContainer.innerHTML = `
         <div class="score-section">
@@ -1158,6 +1234,8 @@
             <div class="score-bar-fill" style="background: ${match_info.className === 'match' ? '#3a855c' : match_info.className === 'partial' ? '#c47a4a' : '#c44a4a'}; width: ${score}%;"></div>
           </div>
         </div>
+
+        ${recHtml}
       `;
     }
   </script>

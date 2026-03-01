@@ -146,6 +146,79 @@ def evaluate_match(skin_hue, outfit_hue):
 
 
 # ----------------------------
+# Color Recommendations based on skin tone
+# ----------------------------
+SKIN_TONE_PALETTES = {
+    "Fair": {
+        "best": [
+            {"name": "Navy Blue", "hex": "#1B3A6B", "hue": 220},
+            {"name": "Emerald Green", "hex": "#2E8B57", "hue": 146},
+            {"name": "Dusty Rose", "hex": "#C4829D", "hue": 337},
+            {"name": "Lavender", "hex": "#8B7BB5", "hue": 260},
+            {"name": "Burgundy", "hex": "#7D1935", "hue": 345},
+        ],
+        "avoid": ["Neon Yellow", "Very Pale Pastels", "White-on-White"],
+        "tip": "Fair skin tones shine in jewel tones and rich, deep shades that create beautiful contrast."
+    },
+    "Medium": {
+        "best": [
+            {"name": "Terracotta", "hex": "#C36A2D", "hue": 26},
+            {"name": "Olive Green", "hex": "#6B7C3A", "hue": 77},
+            {"name": "Royal Purple", "hex": "#6A1B9A", "hue": 280},
+            {"name": "Teal", "hex": "#008080", "hue": 180},
+            {"name": "Coral", "hex": "#E2725B", "hue": 10},
+        ],
+        "avoid": ["Beige", "Khaki", "Muddy Browns"],
+        "tip": "Medium skin tones look stunning in warm earth tones and vibrant jewel-toned shades."
+    },
+    "Wheatish": {
+        "best": [
+            {"name": "Deep Orange", "hex": "#D2691E", "hue": 25},
+            {"name": "Forest Green", "hex": "#228B22", "hue": 120},
+            {"name": "Mustard Yellow", "hex": "#C9A227", "hue": 44},
+            {"name": "Cobalt Blue", "hex": "#0047AB", "hue": 215},
+            {"name": "Magenta", "hex": "#C2185B", "hue": 337},
+        ],
+        "avoid": ["Pale Pastels", "Light Beige", "Washed-out Yellows"],
+        "tip": "Wheatish skin tones glow in bold, saturated colors — especially warm oranges, golds, and blues."
+    },
+    "Dark": {
+        "best": [
+            {"name": "Bright White", "hex": "#F5F5F5", "hue": 0},
+            {"name": "Electric Blue", "hex": "#0066FF", "hue": 220},
+            {"name": "Bright Red", "hex": "#CC0000", "hue": 0},
+            {"name": "Gold", "hex": "#FFD700", "hue": 51},
+            {"name": "Hot Pink", "hex": "#FF69B4", "hue": 330},
+        ],
+        "avoid": ["Dark Browns", "Very Dark Navy", "Black-on-Black"],
+        "tip": "Dark skin tones look incredible in bright, bold colors and high-contrast combinations."
+    }
+}
+
+def get_recommendations(skin_tone, result):
+    """
+    Returns recommended colors and a tip based on skin tone.
+    For non-perfect matches, also generates ideal color suggestions.
+    """
+    palette = SKIN_TONE_PALETTES.get(skin_tone, SKIN_TONE_PALETTES["Medium"])
+    
+    rec = {
+        "best_colors": palette["best"],
+        "avoid": palette["avoid"],
+        "tip": palette["tip"],
+    }
+
+    if result == "Not a Match":
+        rec["message"] = f"Your outfit color doesn't complement your {skin_tone.lower()} skin tone well. Try one of these colors for a great match:"
+    elif result == "Partial Match":
+        rec["message"] = f"Your outfit is a decent match but you could look even better! For your {skin_tone.lower()} skin tone, these colors would be ideal:"
+    else:
+        rec["message"] = f"Great choice! Your outfit complements your {skin_tone.lower()} skin tone well. Here are more great options for your tone:"
+
+    return rec
+
+
+# ----------------------------
 # Routes
 # ----------------------------
 @app.route("/")
@@ -331,12 +404,15 @@ def analyze():
         except OSError:
             pass
 
+    recommendations = get_recommendations(skin_tone, result)
+
     return jsonify({
         "skin_tone": skin_tone,
         "result": result,
         "score": score,
         "skin_color": [float(x) for x in avg_skin_rgb],
         "outfit_color": [float(x) for x in outfit_color],
+        "recommendations": recommendations,
         "debug": {
             "skin_Y_luma": Y_luma,
             "skin_hue": round(float(skin_hue), 1),
